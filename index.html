@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Operacional — BRSP26</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#1a1d23;--panel:#22262e;--border:#2e3340;
+  --text:#e2e8f0;--muted:#8892a4;
+  --blue:#3b9edd;--cyan:#00c8d4;--pink:#e040a0;
+  --green:#4caf50;--yellow:#f5a623;--red:#f44336;
+  --pad:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{font-size:14px;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;min-height:100vh;overflow-x:hidden;}
+
+/* ── HEADER ── */
+.header{background:var(--panel);border-bottom:1px solid var(--border);padding:10px var(--pad);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:100;}
+.header h1{font-size:13px;font-weight:700;white-space:nowrap;}
+.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.ts-tag{background:rgba(59,158,221,.15);color:var(--blue);border-radius:4px;padding:2px 7px;font-size:10px;white-space:nowrap;}
+
+/* ── METAS BAR (colapsável no mobile) ── */
+.metas-toggle{display:none;background:var(--panel);border-bottom:1px solid var(--border);padding:8px var(--pad);cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);user-select:none;}
+.metas-toggle span{float:right;transition:transform .2s;}
+.metas-toggle.open span{transform:rotate(180deg);}
+.metas-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:10px var(--pad);display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+.metas-bar label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:2px;}
+.metas-bar input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:6px 8px;width:85px;font-size:13px;text-align:center;}
+.metas-bar input:focus{outline:none;border-color:var(--blue);}
+.btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap;min-height:34px;touch-action:manipulation;}
+.btn:active{opacity:.75;}
+.btn-gray{background:#374151;}
+.btn-red{background:#b91c1c;}
+.metas-bar .meta-title{font-size:12px;font-weight:700;color:var(--text);}
+.metas-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+
+/* ── NAV TABS ── */
+.nav-tabs{background:var(--panel);border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:41px;z-index:99;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{padding:11px 16px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;min-height:42px;display:flex;align-items:center;touch-action:manipulation;}
+.nav-tab:active{background:rgba(255,255,255,.04);}
+.nav-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* ── UPLOAD ── */
+#upload-section{padding:32px var(--pad);display:flex;flex-direction:column;align-items:center;gap:14px;}
+.upload-box{border:2px dashed var(--border);border-radius:12px;padding:36px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;max-width:480px;width:100%;}
+.upload-box:active{border-color:var(--blue);background:rgba(59,158,221,.06);}
+.upload-box input[type=file]{display:none;}
+.upload-box .icon{font-size:44px;margin-bottom:10px;}
+.upload-box p{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.5;}
+.upload-box strong{color:var(--text);font-size:14px;}
+.btn-upload{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:14px;cursor:pointer;font-weight:600;margin-top:10px;min-height:44px;touch-action:manipulation;}
+
+/* ── SECTIONS ── */
+.section{display:none;padding:12px var(--pad);}
+.section.active{display:block;}
+
+/* ── INFO STRIP ── */
+.info-strip{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+.info-strip .kv{display:flex;flex-direction:column;gap:1px;}
+.info-strip .kv span:first-child{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.info-strip .kv span:last-child{font-size:13px;font-weight:700;color:var(--text);}
+.turno-tag{background:rgba(0,200,212,.15);color:var(--cyan);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:600;}
+
+/* ── GAUGES ── */
+.gauges-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.gauge-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;}
+.gauge-card .g-title{font-size:10px;color:var(--muted);margin-bottom:6px;text-align:center;}
+.gauge-card canvas{width:100%!important;max-width:260px;}
+.gauge-card .g-range{font-size:9px;color:var(--muted);margin-top:3px;display:flex;width:100%;max-width:260px;justify-content:space-between;}
+
+/* ── CHART CARDS ── */
+.chart-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;overflow:hidden;}
+.chart-card h3{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;}
+.chart-card .chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.chart-card canvas{max-height:220px;min-width:300px;}
+
+/* ── TABLES ── */
+.tables-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.table-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.table-card h3{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead th{background:#1e2229;color:var(--muted);font-weight:600;padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;}
+tbody tr:active{background:rgba(255,255,255,.05);}
+tbody td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;}
+.rank-num{color:var(--muted);font-size:10px;}
+.val-blue{color:var(--blue);font-weight:600;}
+.val-cyan{color:var(--cyan);font-weight:600;}
+.val-pink{color:var(--pink);font-weight:600;}
+.bar-inline{display:inline-block;height:10px;border-radius:2px;vertical-align:middle;min-width:3px;}
+.bar-blue{background:var(--blue);}
+.bar-cyan{background:var(--cyan);}
+.status-ok{color:var(--green);}
+.status-warn{color:var(--yellow);}
+.status-bad{color:var(--red);}
+
+/* ── HISTÓRICO ── */
+.hist-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.hist-count{font-size:11px;color:var(--muted);}
+.hist-table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:60vh;-webkit-overflow-scrolling:touch;}
+.hist-table-wrap table{font-size:11px;}
+.hist-del-btn{background:none;border:none;color:#b91c1c;cursor:pointer;font-size:13px;padding:4px 8px;border-radius:4px;min-height:32px;}
+.hist-del-btn:active{background:rgba(185,28,28,.15);}
+.empty-hist{color:var(--muted);text-align:center;padding:40px;font-size:13px;}
+
+/* ── TEMPORAL CHARTS ── */
+.temporal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+
+/* ════════════════════════════
+   TABLET  (≤ 900px)
+════════════════════════════ */
+@media(max-width:900px){
+  :root{--pad:12px;}
+  .tables-grid{grid-template-columns:1fr;}
+  .temporal-grid{grid-template-columns:1fr;}
+  .metas-bar .meta-title{width:100%;}
+}
+
+/* ════════════════════════════
+   MOBILE  (≤ 600px)
+════════════════════════════ */
+@media(max-width:600px){
+  :root{--pad:10px;}
+  html{font-size:13px;}
+
+  /* Header compacto */
+  .header h1{font-size:12px;}
+  .header{padding:8px var(--pad);}
+
+  /* Metas bar colapsável */
+  .metas-toggle{display:block;}
+  .metas-bar.collapsed{display:none!important;}
+  .metas-bar{flex-direction:column;align-items:flex-start;gap:10px;padding:12px var(--pad);}
+  .metas-bar .meta-title{margin-bottom:2px;}
+  .metas-fields{display:flex;gap:10px;flex-wrap:wrap;width:100%;}
+  .metas-bar label{flex:1;min-width:70px;}
+  .metas-bar input{width:100%;}
+  .metas-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .metas-actions .btn{width:100%;justify-content:center;display:flex;font-size:11px;padding:8px 6px;}
+
+  /* Tabs menores */
+  .nav-tab{padding:10px 12px;font-size:11px;}
+  .nav-tabs{top:37px;}
+
+  /* Upload */
+  .upload-box{padding:28px 16px;}
+  .upload-box .icon{font-size:36px;}
+  .upload-box strong{font-size:13px;}
+  #upload-section{padding:24px var(--pad);}
+
+  /* Gauges: 1 coluna no mobile, 2 colunas aceita */
+  .gauges-row{grid-template-columns:1fr;}
+
+  /* Charts scroll horizontal */
+  .chart-card canvas{min-width:420px;}
+
+  /* Tabelas */
+  .tables-grid{grid-template-columns:1fr;}
+  table{font-size:11px;}
+  thead th{padding:5px 7px;font-size:10px;}
+  tbody td{padding:5px 7px;}
+
+  /* Info strip 2 colunas */
+  .info-strip{gap:10px;}
+  .info-strip .kv span:last-child{font-size:12px;}
+
+  /* Histórico */
+  .hist-toolbar{gap:6px;}
+  .hist-toolbar .btn{font-size:11px;padding:6px 10px;}
+  .hist-table-wrap{max-height:55vh;}
+
+  /* Temporal */
+  .temporal-grid{grid-template-columns:1fr;}
+}
+
+/* ════════════════════════════
+   MUITO PEQUENO (≤ 380px)
+════════════════════════════ */
+@media(max-width:380px){
+  .nav-tab{padding:9px 10px;font-size:10px;}
+  .header h1{font-size:11px;}
+  .metas-actions{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>📊 Dashboard — BRSP26</h1>
+  <div class="header-right">
+    <span id="header-ts"></span>
+    <span id="hist-badge" style="display:none;"></span>
+  </div>
+</div>
+
+<!-- METAS TOGGLE (só aparece no mobile) -->
+<div class="metas-toggle" id="metas-toggle" style="display:none;" onclick="toggleMetas()">
+  🎯 Metas &amp; Ações <span>▼</span>
+</div>
+
+<!-- METAS BAR -->
+<div class="metas-bar" id="metas-bar" style="display:none;">
+  <span class="meta-title">🎯 Metas:</span>
+  <div class="metas-fields">
+    <label>LIQUI (meta)<input type="number" id="meta-liqui" value="600" min="1"></label>
+    <label>EFET (meta)<input type="number" id="meta-efet" value="650" min="1"></label>
+    <label>UTILIZ (%)<input type="number" id="meta-utiliz" value="85" min="1" max="200"></label>
+  </div>
+  <div class="metas-actions">
+    <button class="btn" onclick="applyMetas()">✓ Aplicar</button>
+    <button class="btn btn-gray" onclick="triggerUpload()">📂 Upload</button>
+    <button class="btn btn-gray" onclick="exportHistory()">⬇ Exportar</button>
+    <button class="btn btn-red" onclick="clearHistory()">🗑 Limpar</button>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs" id="nav-tabs" style="display:none;">
+  <div class="nav-tab active" onclick="switchTab('turno')">📋 Turno Atual</div>
+  <div class="nav-tab" onclick="switchTab('hora')">⏰ Hora a Hora</div>
+  <div class="nav-tab" onclick="switchTab('dia')">📅 Dia a Dia</div>
+  <div class="nav-tab" onclick="switchTab('semana')">📆 Semanal</div>
+  <div class="nav-tab" onclick="switchTab('mes')">🗓 Mensal</div>
+  <div class="nav-tab" onclick="switchTab('historico')">🗂 Histórico</div>
+</div>
+
+<!-- UPLOAD SECTION -->
+<div id="upload-section">
+  <div class="upload-box" onclick="document.getElementById('csv-input').click()" ondragover="evStop(event)" ondrop="evDrop(event)">
+    <div class="icon">📁</div>
+    <strong>Arraste o CSV aqui ou clique para selecionar</strong>
+    <p>Arquivo exportado do sistema (Lista_de_representantes...)</p>
+    <input type="file" id="csv-input" accept=".csv" onchange="loadFile(this.files[0])">
+    <button class="btn-upload" onclick="event.stopPropagation();document.getElementById('csv-input').click()">Selecionar arquivo</button>
+  </div>
+  <div id="upload-hist-hint" style="display:none;"></div>
+</div>
+
+<!-- TAB: TURNO ATUAL -->
+<div class="section active" id="tab-turno">
+  <div class="info-strip" id="info-strip"></div>
+  <div class="gauges-row">
+    <div class="gauge-card"><div class="g-title">LIQUI — <span id="lbl-meta-liqui">meta 600</span></div><canvas id="gauge-liqui" height="150"></canvas><div class="g-range"><span>0</span><span id="rng-liqui">750</span></div></div>
+    <div class="gauge-card"><div class="g-title">EFET — <span id="lbl-meta-efet">meta 650</span></div><canvas id="gauge-efet" height="150"></canvas><div class="g-range"><span>0</span><span id="rng-efet">813</span></div></div>
+    <div class="gauge-card"><div class="g-title">UTILIZ — <span id="lbl-meta-utiliz">meta 85%</span></div><canvas id="gauge-utiliz" height="150"></canvas><div class="g-range"><span>0%</span><span>110%</span></div></div>
+  </div>
+  <div class="chart-card"><h3>LÍQUIDA</h3><div class="chart-wrap"><canvas id="chart-liqui"></canvas></div></div>
+  <div class="chart-card"><h3>EFETIVA</h3><div class="chart-wrap"><canvas id="chart-efet"></canvas></div></div>
+  <div class="chart-card"><h3>UTILIZAÇÃO</h3><div class="chart-wrap"><canvas id="chart-utiliz"></canvas></div></div>
+  <div class="tables-grid">
+    <div class="table-card"><h3>Ranking por Representante</h3><table id="table-reps"></table></div>
+    <div class="table-card"><h3>Detalhe + Data/Hora Upload</h3><table id="table-detail"></table></div>
+  </div>
+</div>
+
+<!-- TAB: HORA A HORA -->
+<div class="section" id="tab-hora">
+  <div class="info-strip"><div class="kv"><span>Período</span><span>Agrupado por hora de upload (arredondada)</span></div></div>
+  <div class="temporal-grid">
+    <div class="chart-card"><h3>LÍQUIDA Média · Hora a Hora</h3><canvas id="th-liqui-avg"></canvas></div>
+    <div class="chart-card"><h3>LÍQUIDA Total · Hora a Hora</h3><canvas id="th-liqui-tot"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Média · Hora a Hora</h3><canvas id="th-efet-avg"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Total · Hora a Hora</h3><canvas id="th-efet-tot"></canvas></div>
+    <div class="chart-card"><h3>UTILIZAÇÃO Média · Hora a Hora</h3><canvas id="th-util-avg"></canvas></div>
+    <div class="chart-card"><h3>Unidades Total · Hora a Hora</h3><canvas id="th-uni-tot"></canvas></div>
+  </div>
+</div>
+
+<!-- TAB: DIA A DIA -->
+<div class="section" id="tab-dia">
+  <div class="info-strip"><div class="kv"><span>Período</span><span>Agrupado por data do arquivo</span></div></div>
+  <div class="temporal-grid">
+    <div class="chart-card"><h3>LÍQUIDA Média · Dia a Dia</h3><canvas id="td-liqui-avg"></canvas></div>
+    <div class="chart-card"><h3>LÍQUIDA Total · Dia a Dia</h3><canvas id="td-liqui-tot"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Média · Dia a Dia</h3><canvas id="td-efet-avg"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Total · Dia a Dia</h3><canvas id="td-efet-tot"></canvas></div>
+    <div class="chart-card"><h3>UTILIZAÇÃO Média · Dia a Dia</h3><canvas id="td-util-avg"></canvas></div>
+    <div class="chart-card"><h3>Unidades Total · Dia a Dia</h3><canvas id="td-uni-tot"></canvas></div>
+  </div>
+</div>
+
+<!-- TAB: SEMANAL -->
+<div class="section" id="tab-semana">
+  <div class="info-strip"><div class="kv"><span>Período</span><span>Agrupado por semana (Seg–Dom)</span></div></div>
+  <div class="temporal-grid">
+    <div class="chart-card"><h3>LÍQUIDA Média · Semanal</h3><canvas id="ts-liqui-avg"></canvas></div>
+    <div class="chart-card"><h3>LÍQUIDA Total · Semanal</h3><canvas id="ts-liqui-tot"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Média · Semanal</h3><canvas id="ts-efet-avg"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Total · Semanal</h3><canvas id="ts-efet-tot"></canvas></div>
+    <div class="chart-card"><h3>UTILIZAÇÃO Média · Semanal</h3><canvas id="ts-util-avg"></canvas></div>
+    <div class="chart-card"><h3>Unidades Total · Semanal</h3><canvas id="ts-uni-tot"></canvas></div>
+  </div>
+</div>
+
+<!-- TAB: MENSAL -->
+<div class="section" id="tab-mes">
+  <div class="info-strip"><div class="kv"><span>Período</span><span>Agrupado por mês/ano</span></div></div>
+  <div class="temporal-grid">
+    <div class="chart-card"><h3>LÍQUIDA Média · Mensal</h3><canvas id="tm-liqui-avg"></canvas></div>
+    <div class="chart-card"><h3>LÍQUIDA Total · Mensal</h3><canvas id="tm-liqui-tot"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Média · Mensal</h3><canvas id="tm-efet-avg"></canvas></div>
+    <div class="chart-card"><h3>EFETIVA Total · Mensal</h3><canvas id="tm-efet-tot"></canvas></div>
+    <div class="chart-card"><h3>UTILIZAÇÃO Média · Mensal</h3><canvas id="tm-util-avg"></canvas></div>
+    <div class="chart-card"><h3>Unidades Total · Mensal</h3><canvas id="tm-uni-tot"></canvas></div>
+  </div>
+</div>
+
+<!-- TAB: HISTÓRICO -->
+<div class="section" id="tab-historico">
+  <div class="hist-toolbar">
+    <span class="hist-count" id="hist-count">0 registros</span>
+    <button class="btn btn-gray" onclick="exportHistory()">⬇ Exportar JSON</button>
+    <button class="btn btn-gray" onclick="importHistory()">📂 Importar JSON</button>
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="doImport(this.files[0])">
+    <button class="btn btn-red" onclick="clearHistory()">🗑 Limpar Tudo</button>
+  </div>
+  <div class="hist-table-wrap">
+    <table id="hist-table">
+      <thead><tr>
+        <th>#</th><th>Data Arquivo</th><th>Turno</th><th>Upload (hora cheia)</th>
+        <th>Reps</th><th>LIQUI Média</th><th>EFET Média</th><th>UTILIZ Média</th><th>Unidades</th><th></th>
+      </tr></thead>
+      <tbody id="hist-tbody"><tr><td colspan="10" class="empty-hist">Nenhum upload registrado ainda.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════
+const LS_KEY = 'brsp26_history_v2';
+let parsedData    = [];
+let uploadTimestamp = '';
+let currentTab    = 'turno';
+
+// ═══════════════════════════════════════════════════════
+//  HISTÓRICO — localStorage
+// ═══════════════════════════════════════════════════════
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveHistory(arr) {
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+}
+function addToHistory(entry) {
+  const arr = getHistory();
+  // Evita duplicata exata (mesmo arquivo + mesma hora cheia)
+  const dup = arr.find(e => e.fileName === entry.fileName && e.uploadHour === entry.uploadHour);
+  if (dup) { if (!confirm(`Já existe um registro para "${entry.fileName}" às ${entry.uploadHour}h.\nDeseja substituir?`)) return; arr.splice(arr.indexOf(dup), 1); }
+  arr.push(entry);
+  saveHistory(arr);
+  refreshHistoryUI();
+  refreshTemporalTabs();
+}
+function deleteHistoryEntry(idx) {
+  const arr = getHistory();
+  arr.splice(idx, 1);
+  saveHistory(arr);
+  refreshHistoryUI();
+  refreshTemporalTabs();
+}
+function clearHistory() {
+  if (!confirm('Apagar TODO o histórico de uploads? Esta ação não pode ser desfeita.')) return;
+  saveHistory([]);
+  refreshHistoryUI();
+  refreshTemporalTabs();
+}
+function exportHistory() {
+  const arr = getHistory();
+  if (!arr.length) { alert('Histórico vazio.'); return; }
+  const blob = new Blob([JSON.stringify(arr, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `brsp26_historico_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+function importHistory() { document.getElementById('import-input').click(); }
+function doImport(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const arr = JSON.parse(e.target.result);
+      if (!Array.isArray(arr)) throw new Error('Formato inválido');
+      const cur = getHistory();
+      let added = 0;
+      arr.forEach(entry => {
+        const dup = cur.find(x => x.fileName===entry.fileName && x.uploadHour===entry.uploadHour);
+        if (!dup) { cur.push(entry); added++; }
+      });
+      saveHistory(cur);
+      refreshHistoryUI();
+      refreshTemporalTabs();
+      alert(`Importação concluída: ${added} novo(s) registro(s) adicionado(s).`);
+    } catch(ex) { alert('Erro ao importar: ' + ex.message); }
+  };
+  r.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════
+//  PARSE DO NOME DO ARQUIVO
+//  Ex: "Lista de representantes 2026-07-27 al 2026-07-27 de 19_00_00 a 03_40_00"
+// ═══════════════════════════════════════════════════════
+function parseFileName(name) {
+  // Extrai datas: YYYY-MM-DD
+  const dateMatches = name.match(/(\d{4}-\d{2}-\d{2})/g) || [];
+  const fileDate = dateMatches[0] || null; // primeira data = data de início
+  let fileDateBR = fileDate ? formatDateBR(fileDate) : '—';
+
+  // Extrai horários de turno: HH_MM_SS a HH_MM_SS
+  const turnMatch = name.match(/(\d{2}_\d{2}_\d{2})\s+a\s+(\d{2}_\d{2}_\d{2})/);
+  const turnoStr = turnMatch ? `${turnMatch[1].replace(/_/g,':')} → ${turnMatch[2].replace(/_/g,':')}` : '—';
+
+  return { fileDate, fileDateBR, turnoStr };
+}
+
+function formatDateBR(isoDate) {
+  if (!isoDate) return '—';
+  const [y,m,d] = isoDate.split('-');
+  return `${d}/${m}/${String(y).slice(2)}`;
+}
+
+// Arredonda hora para baixo: 12:40 → 12:00
+function roundHourDown(date) {
+  const d = new Date(date);
+  d.setMinutes(0,0,0);
+  return d;
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEMANA ISO (Seg = dia 1)
+// ═══════════════════════════════════════════════════════
+function isoWeek(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay() || 7; // 1=seg … 7=dom
+  d.setDate(d.getDate() + 4 - day);
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2,'0')}`;
+}
+function weekLabel(wk) {
+  // "2026-W30" → "Sem 30/2026"
+  const [y,w] = wk.split('-W');
+  return `Sem ${w}/${y}`;
+}
+function monthKey(dateStr) {
+  const [y,m] = dateStr.split('-');
+  return `${y}-${m}`;
+}
+function monthLabel(mk) {
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const [y,m] = mk.split('-');
+  return `${months[parseInt(m)-1]}/${y}`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  UPLOAD & PARSE
+// ═══════════════════════════════════════════════════════
+function evStop(e) { e.preventDefault(); }
+function evDrop(e) { e.preventDefault(); loadFile(e.dataTransfer.files[0]); }
+function triggerUpload() { document.getElementById('csv-input').click(); }
+
+function loadFile(file) {
+  if (!file) return;
+  const now = new Date();
+  const hourFloor = roundHourDown(now);
+  uploadTimestamp = now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const uploadHour = hourFloor.getHours();
+  const uploadHourLabel = `${String(uploadHour).padStart(2,'0')}:00`;
+
+  document.getElementById('header-ts').innerHTML =
+    `<span class="ts-tag">Upload: ${uploadTimestamp} · ${file.name}</span>`;
+
+  const { fileDate, fileDateBR, turnoStr } = parseFileName(file.name);
+
+  Papa.parse(file, {
+    header:true, skipEmptyLines:true, encoding:'UTF-8',
+    complete: r => {
+      parsedData = r.data;
+      const rows = extractRows(parsedData);
+      const n = rows.length || 1;
+      const avgLiqui  = rows.reduce((s,x)=>s+x.liqui, 0)/n;
+      const avgEfet   = rows.reduce((s,x)=>s+x.efet,  0)/n;
+      const avgUtiliz = rows.reduce((s,x)=>s+x.utiliz,0)/n;
+      const totUnid   = rows.reduce((s,x)=>s+x.unidades,0);
+
+      const entry = {
+        fileName:    file.name,
+        fileDate:    fileDate || now.toISOString().slice(0,10),
+        fileDateBR,
+        turnoStr,
+        uploadTs:    uploadTimestamp,
+        uploadHour:  uploadHourLabel,
+        uploadHourNum: uploadHour,
+        weekKey:     isoWeek(fileDate || now.toISOString().slice(0,10)),
+        monthKey:    monthKey(fileDate || now.toISOString().slice(0,10)),
+        reps:        n,
+        avgLiqui:    +avgLiqui.toFixed(2),
+        avgEfet:     +avgEfet.toFixed(2),
+        avgUtiliz:   +avgUtiliz.toFixed(2),
+        totUnidades: totUnid,
+        rows:        rows
+      };
+
+      addToHistory(entry);
+      showDashboard(file.name, fileDateBR, turnoStr, uploadHourLabel);
+      renderTurno(rows);
+    }
+  });
+}
+
+function showDashboard(fileName, fileDateBR, turnoStr, uploadHourLabel) {
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('metas-bar').style.display = 'flex';
+  document.getElementById('metas-toggle').style.display = 'block';
+  document.getElementById('nav-tabs').style.display  = 'flex';
+  switchTab('turno');
+
+  const hist = getHistory();
+  document.getElementById('hist-badge').style.display = 'inline';
+  document.getElementById('hist-badge').innerHTML =
+    `<span class="ts-tag">📦 ${hist.length}</span>`;
+}
+
+function toggleMetas() {
+  const bar = document.getElementById('metas-bar');
+  const tog = document.getElementById('metas-toggle');
+  const isOpen = !bar.classList.contains('collapsed');
+  bar.classList.toggle('collapsed', isOpen);
+  tog.classList.toggle('open', !isOpen);
+}
+
+// ═══════════════════════════════════════════════════════
+//  EXTRAÇÃO DE LINHAS DO CSV
+// ═══════════════════════════════════════════════════════
+function parseNum(val) {
+  if (!val||val==='-') return 0;
+  return parseFloat(String(val).replace('%','').replace(',','.')) || 0;
+}
+function extractRows(data) {
+  const colMap={};
+  if (data.length) Object.keys(data[0]).forEach(k=>{colMap[k.replace(/\ufeff/g,'').trim()]=k;});
+  const col = n => colMap[n]||n;
+  return data.map(r=>({
+    rep:      (r[col('Representantes')]||'—').trim(),
+    liqui:    parseNum(r[col('Prod. liquida sist.')]||r[col('Prod. liquida sist')]||0),
+    efet:     parseNum(r[col('Prod. Efetiva')]||0),
+    utiliz:   parseNum(r[col('Utilização')]||0),
+    unidades: parseNum(r[col('Unidades')]||0),
+  })).filter(r=>r.rep&&r.rep!=='—');
+}
+function shortName(name) {
+  const p=name.trim().split(' ');
+  return p.length<=2?name:p[0]+' '+p[p.length-1];
+}
+
+// ═══════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-tab').forEach((el,i) => {
+    const tabs = ['turno','hora','dia','semana','mes','historico'];
+    el.classList.toggle('active', tabs[i]===tab);
+  });
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+
+  if (tab==='hora')     renderTemporal('hora');
+  if (tab==='dia')      renderTemporal('dia');
+  if (tab==='semana')   renderTemporal('semana');
+  if (tab==='mes')      renderTemporal('mes');
+  if (tab==='historico') refreshHistoryUI();
+}
+function applyMetas() { if (parsedData.length) renderTurno(extractRows(parsedData)); }
+
+// ═══════════════════════════════════════════════════════
+//  TURNO ATUAL
+// ═══════════════════════════════════════════════════════
+function renderTurno(rows) {
+  const metaLiqui  = parseFloat(document.getElementById('meta-liqui').value)||600;
+  const metaEfet   = parseFloat(document.getElementById('meta-efet').value) ||650;
+  const metaUtiliz = parseFloat(document.getElementById('meta-utiliz').value)||85;
+  const n = rows.length||1;
+  const totalUnidades = rows.reduce((s,r)=>s+r.unidades,0);
+  const avgLiqui  = rows.reduce((s,r)=>s+r.liqui, 0)/n;
+  const avgEfet   = rows.reduce((s,r)=>s+r.efet,  0)/n;
+  const avgUtiliz = rows.reduce((s,r)=>s+r.utiliz,0)/n;
+
+  // Info strip
+  const lastEntry = getHistory().slice(-1)[0] || {};
+  document.getElementById('info-strip').innerHTML = `
+    <div class="kv"><span>Representantes</span><span>${n}</span></div>
+    <div class="kv"><span>Total Unidades</span><span>${totalUnidades.toLocaleString('pt-BR')}</span></div>
+    <div class="kv"><span>LIQUI Média</span><span>${avgLiqui.toLocaleString('pt-BR',{maximumFractionDigits:1})}</span></div>
+    <div class="kv"><span>EFET Média</span><span>${avgEfet.toLocaleString('pt-BR',{maximumFractionDigits:1})}</span></div>
+    <div class="kv"><span>UTILIZ Média</span><span>${avgUtiliz.toFixed(1)}%</span></div>
+    ${lastEntry.turnoStr ? `<span class="turno-tag">⏱ ${lastEntry.turnoStr}</span>` : ''}
+    <div class="kv"><span>Data Arquivo</span><span>${lastEntry.fileDateBR||'—'}</span></div>
+    <div class="kv"><span>Upload</span><span style="font-size:11px;">${uploadTimestamp}</span></div>
+  `;
+
+  document.getElementById('lbl-meta-liqui').textContent  = `meta ${metaLiqui}`;
+  document.getElementById('lbl-meta-efet').textContent   = `meta ${metaEfet}`;
+  document.getElementById('lbl-meta-utiliz').textContent = `meta ${metaUtiliz}%`;
+
+  const maxLiquiG = Math.max(metaLiqui*1.25, avgLiqui*1.1);
+  const maxEfetG  = Math.max(metaEfet*1.25,  avgEfet*1.1);
+  document.getElementById('rng-liqui').textContent = Math.round(maxLiquiG);
+  document.getElementById('rng-efet').textContent  = Math.round(maxEfetG);
+
+  drawGauge('gauge-liqui',  avgLiqui,  metaLiqui,  maxLiquiG, false);
+  drawGauge('gauge-efet',   avgEfet,   metaEfet,   maxEfetG,  false);
+  drawGauge('gauge-utiliz', avgUtiliz, metaUtiliz, 110,       true);
+
+  const sortedAll = [...rows].sort((a,b)=>b.liqui-a.liqui);
+  const filtL = sortedAll.filter(r=>r.liqui>2);
+  const filtE = sortedAll.filter(r=>r.efet>2);
+
+  renderBarChart('chart-liqui', filtL.map(r=>shortName(r.rep)), filtL.map(r=>r.liqui), metaLiqui, `Meta (${metaLiqui})`);
+  renderBarChart('chart-efet',  filtE.map(r=>shortName(r.rep)), filtE.map(r=>r.efet),  metaEfet,  `Meta (${metaEfet})`);
+  renderBarChartPct('chart-utiliz', filtL.map(r=>shortName(r.rep)), filtL.map(r=>r.utiliz), metaUtiliz);
+
+  // Ranking
+  const maxL = Math.max(...rows.map(r=>r.liqui),1);
+  const maxE = Math.max(...rows.map(r=>r.efet), 1);
+  let rH = `<thead><tr><th>#</th><th>Representante</th><th>LIQUI</th><th>EFET</th><th>UTILIZ</th></tr></thead><tbody>`;
+  [...rows].sort((a,b)=>b.liqui-a.liqui).forEach((r,i) => {
+    const uc = r.utiliz>=metaUtiliz?'status-ok':r.utiliz>=metaUtiliz*.7?'status-warn':'status-bad';
+    rH += `<tr><td class="rank-num">${i+1}.</td><td>${r.rep}</td>
+      <td><span class="bar-inline bar-blue" style="width:${Math.round(r.liqui/maxL*80)}px"></span> <span class="val-blue">${r.liqui.toLocaleString('pt-BR',{maximumFractionDigits:2})}</span></td>
+      <td><span class="bar-inline bar-cyan"  style="width:${Math.round(r.efet/maxE*80)}px"></span> <span class="val-cyan">${r.efet.toLocaleString('pt-BR',{maximumFractionDigits:2})}</span></td>
+      <td class="${uc} val-pink">${r.utiliz.toFixed(2)}%</td></tr>`;
+  });
+  document.getElementById('table-reps').innerHTML = rH + '</tbody>';
+
+  // Detail — ordenado por Unidades (maior → menor)
+  let dH = `<thead><tr><th>#</th><th>Representante</th><th>LIQUI</th><th>EFET</th><th>UTILIZ</th><th>Unidades ↓</th><th>Data/Hora Upload</th></tr></thead><tbody>`;
+  [...rows].sort((a,b) => b.unidades - a.unidades).forEach((r,i) => {
+    const uc = r.utiliz>=metaUtiliz?'status-ok':r.utiliz>=metaUtiliz*.7?'status-warn':'status-bad';
+    dH += `<tr><td class="rank-num">${i+1}.</td><td>${r.rep}</td>
+      <td class="val-blue">${r.liqui.toLocaleString('pt-BR',{maximumFractionDigits:2})}</td>
+      <td class="val-cyan">${r.efet.toLocaleString('pt-BR',{maximumFractionDigits:2})}</td>
+      <td class="${uc} val-pink">${r.utiliz.toFixed(2)}%</td>
+      <td>${r.unidades.toLocaleString('pt-BR')}</td>
+      <td><span class="ts-tag">${uploadTimestamp}</span></td></tr>`;
+  });
+  document.getElementById('table-detail').innerHTML = dH + '</tbody>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  HISTÓRICO UI
+// ═══════════════════════════════════════════════════════
+function refreshHistoryUI() {
+  const arr = getHistory();
+  document.getElementById('hist-count').textContent = `${arr.length} registro(s)`;
+  if (!arr.length) {
+    document.getElementById('hist-tbody').innerHTML = '<tr><td colspan="10" class="empty-hist">Nenhum upload registrado ainda.</td></tr>';
+    return;
+  }
+  let html = '';
+  [...arr].reverse().forEach((e, ri) => {
+    const idx = arr.length - 1 - ri;
+    html += `<tr>
+      <td class="rank-num">${arr.length - ri}</td>
+      <td>${e.fileDateBR}</td>
+      <td><span class="ts-tag" style="font-size:10px;">${e.turnoStr}</span></td>
+      <td>${e.uploadTs} <small style="color:var(--muted)">(${e.uploadHour})</small></td>
+      <td>${e.reps}</td>
+      <td class="val-blue">${e.avgLiqui.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td>
+      <td class="val-cyan">${e.avgEfet.toLocaleString('pt-BR',{maximumFractionDigits:1})}</td>
+      <td class="val-pink">${e.avgUtiliz.toFixed(1)}%</td>
+      <td>${e.totUnidades.toLocaleString('pt-BR')}</td>
+      <td><button class="hist-del-btn" onclick="deleteHistoryEntry(${idx})">✕</button></td>
+    </tr>`;
+  });
+  document.getElementById('hist-tbody').innerHTML = html;
+
+  document.getElementById('hist-badge').style.display = 'inline';
+  document.getElementById('hist-badge').innerHTML =
+    `<span class="ts-tag">📦 ${arr.length} upload(s)</span>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  VISUALIZAÇÕES TEMPORAIS
+// ═══════════════════════════════════════════════════════
+function refreshTemporalTabs() {
+  if (['hora','dia','semana','mes'].includes(currentTab)) renderTemporal(currentTab);
+}
+
+function groupBy(arr, keyFn) {
+  const map = {};
+  arr.forEach(e => {
+    const k = keyFn(e);
+    if (!map[k]) map[k] = [];
+    map[k].push(e);
+  });
+  return map;
+}
+
+function renderTemporal(mode) {
+  const hist = getHistory();
+  if (!hist.length) return;
+
+  let grouped, labelFn;
+  if (mode === 'hora') {
+    grouped = groupBy(hist, e => `${e.fileDate}_${e.uploadHour}`);
+    labelFn = k => { const [d,h] = k.split('_'); return `${formatDateBR(d)} ${h}`; };
+  } else if (mode === 'dia') {
+    grouped = groupBy(hist, e => e.fileDate);
+    labelFn = k => formatDateBR(k);
+  } else if (mode === 'semana') {
+    grouped = groupBy(hist, e => e.weekKey);
+    labelFn = k => weekLabel(k);
+  } else {
+    grouped = groupBy(hist, e => e.monthKey);
+    labelFn = k => monthLabel(k);
+  }
+
+  const keys    = Object.keys(grouped).sort();
+  const labels  = keys.map(labelFn);
+  const avgL    = keys.map(k => avg(grouped[k].map(e=>e.avgLiqui)));
+  const totL    = keys.map(k => grouped[k].reduce((s,e)=>s+e.avgLiqui*e.reps,0));
+  const avgE    = keys.map(k => avg(grouped[k].map(e=>e.avgEfet)));
+  const totE    = keys.map(k => grouped[k].reduce((s,e)=>s+e.avgEfet*e.reps,0));
+  const avgU    = keys.map(k => avg(grouped[k].map(e=>e.avgUtiliz)));
+  const totUni  = keys.map(k => grouped[k].reduce((s,e)=>s+e.totUnidades,0));
+
+  const metaL = parseFloat(document.getElementById('meta-liqui').value)||600;
+  const metaE = parseFloat(document.getElementById('meta-efet').value) ||650;
+  const metaU = parseFloat(document.getElementById('meta-utiliz').value)||85;
+
+  const pfx = {hora:'th',dia:'td',semana:'ts',mes:'tm'}[mode];
+
+  renderTemporalBar(`${pfx}-liqui-avg`, labels, avgL, metaL, `Meta (${metaL})`, false);
+  renderTemporalBar(`${pfx}-liqui-tot`, labels, totL, null,  null,               false);
+  renderTemporalBar(`${pfx}-efet-avg`,  labels, avgE, metaE, `Meta (${metaE})`,  false);
+  renderTemporalBar(`${pfx}-efet-tot`,  labels, totE, null,  null,               false);
+  renderTemporalBar(`${pfx}-util-avg`,  labels, avgU, metaU, `Meta (${metaU}%)`, true);
+  renderTemporalBar(`${pfx}-uni-tot`,   labels, totUni, null, null,              false);
+}
+
+function avg(arr) { return arr.length ? arr.reduce((s,v)=>s+v,0)/arr.length : 0; }
+
+function renderTemporalBar(canvasId, labels, values, meta, metaLabel, isPercent) {
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  const ctx = el.getContext('2d');
+  if (window['_tc_'+canvasId]) window['_tc_'+canvasId].destroy();
+  const maxVal = Math.max(...values, meta||0) * 1.18 || 10;
+  const plugins = [];
+  if (meta !== null && metaLabel) {
+    plugins.push({
+      id: 'tMetaLine_'+canvasId,
+      afterDraw(chart) {
+        const { ctx, chartArea:{left,right}, scales:{y} } = chart;
+        const yp = y.getPixelForValue(meta);
+        ctx.save();
+        ctx.setLineDash([5,4]);
+        ctx.strokeStyle='#e040a0'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(left,yp); ctx.lineTo(right,yp); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#e040a0'; ctx.font='bold 10px Segoe UI';
+        ctx.textAlign='right'; ctx.textBaseline='bottom';
+        ctx.fillText(metaLabel, right-4, yp-3);
+        ctx.restore();
+      }
+    });
+  }
+  // labels dentro das barras
+  plugins.push({
+    id: 'tVals_'+canvasId,
+    afterDraw(chart) {
+      const ds = chart.data.datasets[0];
+      const meta0 = chart.getDatasetMeta(0);
+      const { ctx, scales:{y} } = chart;
+      ctx.save(); ctx.font='bold 9px Segoe UI'; ctx.textAlign='center';
+      meta0.data.forEach((bar,i) => {
+        const val = ds.data[i];
+        if (!val) return;
+        const lbl = isPercent ? val.toFixed(1)+'%' : val.toLocaleString('pt-BR',{maximumFractionDigits:1});
+        const barH = y.getPixelForValue(0) - bar.y;
+        if (barH > 20) {
+          ctx.fillStyle='rgba(0,0,0,.7)'; ctx.fillText(lbl,bar.x,bar.y+13);
+          ctx.fillStyle='#fff';           ctx.fillText(lbl,bar.x,bar.y+13);
+        } else {
+          ctx.fillStyle='#e2e8f0'; ctx.fillText(lbl,bar.x,bar.y-4);
+        }
+      });
+      ctx.restore();
+    }
+  });
+
+  const PALETTE=['#3b9edd','#00c8d4','#e040a0','#f5a623','#4caf50','#9c27b0','#ff5722','#8bc34a','#ff9800'];
+  window['_tc_'+canvasId] = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data:values, backgroundColor:values.map((_,i)=>PALETTE[i%PALETTE.length]), borderWidth:0, borderRadius:3 }] },
+    options:{
+      responsive:true,
+      layout:{ padding:{ right: meta ? (metaLabel||'').length*6+8 : 8 } },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => isPercent ? c.parsed.y.toFixed(2)+'%' : c.parsed.y.toLocaleString('pt-BR',{maximumFractionDigits:2}) } } },
+      scales:{
+        y:{ grid:{color:'#2e3340'}, ticks:{ color:'#8892a4', font:{size:9}, callback: v => isPercent?v+'%':v }, min:0, max:Math.ceil(maxVal) },
+        x:{ grid:{display:false}, ticks:{color:'#8892a4',font:{size:9},maxRotation:45} }
+      }
+    },
+    plugins
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  GAUGE — Canvas puro com degradê
+// ═══════════════════════════════════════════════════════
+function getGaugeColor(pct) {
+  if (pct<=0) return '#e53935';
+  if (pct<0.3)  return lerpColor('#e53935','#ff8f00',pct/0.3);
+  if (pct<0.83) return lerpColor('#ff8f00','#76ff03',(pct-0.3)/0.53);
+  return lerpColor('#76ff03','#1b5e20',(pct-0.83)/0.17);
+}
+function lerpColor(a,b,t) {
+  const ah=parseInt(a.slice(1),16), bh=parseInt(b.slice(1),16);
+  const ar=(ah>>16)&255, ag=(ah>>8)&255, ab=ah&255;
+  const br=(bh>>16)&255, bg=(bh>>8)&255, bb=bh&255;
+  return `rgb(${Math.round(ar+(br-ar)*t)},${Math.round(ag+(bg-ag)*t)},${Math.round(ab+(bb-ab)*t)})`;
+}
+function drawGauge(canvasId,value,meta,maxVal,isPercent) {
+  const canvas=document.getElementById(canvasId);
+  const W=canvas.offsetWidth||260, H=150;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H-18, R=Math.min(W*.42,cy-10), thick=R*.22;
+  const pct=Math.min(Math.max(value/maxVal,0),1);
+  const metaPct=Math.min(Math.max(meta/maxVal,0),1);
+  // trilho
+  ctx.beginPath(); ctx.arc(cx,cy,R,Math.PI,2*Math.PI,false);
+  ctx.strokeStyle='#2e3340'; ctx.lineWidth=thick; ctx.lineCap='butt'; ctx.stroke();
+  // arco degradê
+  for (let i=0;i<120;i++) {
+    const t0=i/120, t1=(i+1)/120;
+    if (t0>pct) break;
+    ctx.beginPath(); ctx.arc(cx,cy,R,Math.PI+t0*Math.PI,Math.PI+Math.min(t1,pct)*Math.PI,false);
+    ctx.strokeStyle=getGaugeColor((t0+t1)/2); ctx.lineWidth=thick; ctx.lineCap='butt'; ctx.stroke();
+  }
+  // traço meta
+  const ma=Math.PI+metaPct*Math.PI;
+  const mx0=cx+Math.cos(ma)*(R-thick*.6), my0=cy+Math.sin(ma)*(R-thick*.6);
+  const mx1=cx+Math.cos(ma)*(R+thick*.6), my1=cy+Math.sin(ma)*(R+thick*.6);
+  ctx.beginPath(); ctx.moveTo(mx0,my0); ctx.lineTo(mx1,my1);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.stroke();
+  // label meta
+  const lr=R+thick*.9, lx=cx+Math.cos(ma)*lr, ly=cy+Math.sin(ma)*lr;
+  ctx.font='bold 10px Segoe UI'; ctx.fillStyle='#fff';
+  ctx.textAlign=ma>Math.PI*1.5?'right':ma<Math.PI*.5?'left':'center';
+  ctx.textBaseline='middle';
+  ctx.fillText(isPercent?`${meta}%`:`${meta}`,lx,ly-6);
+  // valor central
+  const dv=isPercent?value.toFixed(1)+'%':value.toLocaleString('pt-BR',{maximumFractionDigits:1});
+  ctx.font=`bold ${R*.32}px Segoe UI`; ctx.fillStyle='#e2e8f0';
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  ctx.fillText(dv,cx,cy-4);
+  ctx.font='10px Segoe UI'; ctx.fillStyle='#8892a4';
+  ctx.fillText('média',cx,cy+13);
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRÁFICOS DE BARRA (turno atual)
+// ═══════════════════════════════════════════════════════
+const PALETTE=['#3b9edd','#00c8d4','#e040a0','#f5a623','#4caf50','#9c27b0','#ff5722','#00bcd4','#8bc34a','#ff9800','#e91e63','#2196f3','#4db6ac','#ffb300','#ab47bc','#26c6da','#66bb6a','#ef5350','#42a5f5'];
+
+function metaAndLabelsPlugin(meta,metaLabel,isPercent) {
+  return { id:'mal_'+Math.random(), afterDraw(chart) {
+    const {ctx,chartArea:{left,right},scales:{y}}=chart;
+    const yp=y.getPixelForValue(meta);
+    ctx.save();
+    ctx.setLineDash([6,4]); ctx.strokeStyle='#e040a0'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(left,yp); ctx.lineTo(right,yp); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#e040a0'; ctx.font='bold 10px Segoe UI';
+    ctx.textAlign='right'; ctx.textBaseline='bottom';
+    ctx.fillText(metaLabel,right-4,yp-3);
+    ctx.restore();
+    const ds=chart.data.datasets[0], meta0=chart.getDatasetMeta(0);
+    ctx.save(); ctx.font='bold 10px Segoe UI'; ctx.textAlign='center';
+    meta0.data.forEach((bar,i)=>{
+      const val=ds.data[i]; if(!val||val<=0) return;
+      const lbl=isPercent?val.toFixed(1)+'%':val.toLocaleString('pt-BR',{maximumFractionDigits:1});
+      const barH=y.getPixelForValue(0)-bar.y;
+      if(barH>22){ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillText(lbl,bar.x,bar.y+14);ctx.fillStyle='#fff';ctx.fillText(lbl,bar.x,bar.y+14);}
+      else{ctx.fillStyle='#e2e8f0';ctx.fillText(lbl,bar.x,bar.y-4);}
+    });
+    ctx.restore();
+  }};
+}
+function renderBarChart(canvasId,labels,values,meta,metaLabel) {
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  if(window['_c_'+canvasId]) window['_c_'+canvasId].destroy();
+  const maxVal=Math.max(...values,meta)*1.18;
+  window['_c_'+canvasId]=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data:values,backgroundColor:values.map((_,i)=>PALETTE[i%PALETTE.length]),borderWidth:0,borderRadius:3}]},
+    options:{responsive:true,layout:{padding:{right:metaLabel.length*6+8}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toLocaleString('pt-BR',{maximumFractionDigits:2})}}},
+      scales:{y:{grid:{color:'#2e3340'},ticks:{color:'#8892a4',font:{size:10}},max:Math.ceil(maxVal)},
+              x:{grid:{display:false},ticks:{color:'#8892a4',font:{size:10},maxRotation:45}}}},
+    plugins:[metaAndLabelsPlugin(meta,metaLabel,false)]
+  });
+}
+function renderBarChartPct(canvasId,labels,values,meta) {
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  if(window['_c_'+canvasId]) window['_c_'+canvasId].destroy();
+  const metaLabel=`Meta (${meta}%)`;
+  const maxVal=Math.max(...values,meta,20)*1.18;
+  window['_c_'+canvasId]=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data:values,backgroundColor:values.map((_,i)=>PALETTE[i%PALETTE.length]),borderWidth:0,borderRadius:3}]},
+    options:{responsive:true,layout:{padding:{right:metaLabel.length*6+8}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(2)+'%'}}},
+      scales:{y:{grid:{color:'#2e3340'},ticks:{color:'#8892a4',font:{size:10},callback:v=>v+'%'},min:0,max:Math.ceil(maxVal)},
+              x:{grid:{display:false},ticks:{color:'#8892a4',font:{size:10},maxRotation:45}}}},
+    plugins:[metaAndLabelsPlugin(meta,metaLabel,true)]
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+(function init() {
+  const hist = getHistory();
+  if (hist.length) {
+    document.getElementById('hist-badge').style.display = 'inline';
+    document.getElementById('hist-badge').innerHTML = `<span class="ts-tag">📦 ${hist.length} upload(s)</span>`;
+    // Mostra hint na tela de upload
+    const hint = document.getElementById('upload-hist-hint');
+    hint.style.display = 'block';
+    hint.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 20px;max-width:500px;text-align:center;">
+      <span style="color:var(--muted);font-size:12px;">📦 Você tem <strong style="color:var(--text)">${hist.length} registro(s)</strong> no histórico.<br>
+      <a href="#" onclick="showHistOnly()" style="color:var(--blue);text-decoration:none;">Ver histórico sem fazer upload</a></span>
+    </div>`;
+  }
+  window.addEventListener('resize', () => { if (parsedData.length) drawGauge('gauge-liqui',0,0,1,false); });
+})();
+
+function showHistOnly() {
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('metas-bar').style.display = 'flex';
+  document.getElementById('metas-toggle').style.display = 'block';
+  document.getElementById('nav-tabs').style.display  = 'flex';
+  switchTab('historico');
+}
+</script>
+</body>
+</html>
