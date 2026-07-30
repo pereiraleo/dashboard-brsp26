@@ -80,6 +80,22 @@
     "totUnidades": 13352
   },
   {
+    "fileName": "Lista de representantes 2026-07-02 al 2026-07-29 de 18_40_00 a 03_20_00.csv",
+    "fileDate": "2026-07-02",
+    "fileDateBR": "02/07/26",
+    "turnoStr": "18:40:00 → 03:20:00",
+    "uploadTs": "30/07/2026, 00:18:21",
+    "uploadHour": "00:00",
+    "uploadHourNum": 0,
+    "weekKey": "2026-W27",
+    "monthKey": "2026-07",
+    "reps": 23,
+    "avgLiqui": 389.83,
+    "avgEfet": 511.43,
+    "avgUtiliz": 68.68,
+    "totUnidades": 390001
+  },
+  {
     "fileName": "Lista de representantes 2026-07-02 al 2026-07-02 de 18_40_00 a 03_20_00.csv",
     "fileDate": "2026-07-02",
     "fileDateBR": "02/07/26",
@@ -1168,6 +1184,22 @@
     "totUnidades": 13892
   },
   {
+    "fileName": "Lista de representantes 2026-07-23 al 2026-07-29 de 19_00_00 a 03_40_00.csv",
+    "fileDate": "2026-07-23",
+    "fileDateBR": "23/07/26",
+    "turnoStr": "19:00:00 → 03:40:00",
+    "uploadTs": "30/07/2026, 00:18:21",
+    "uploadHour": "00:00",
+    "uploadHourNum": 0,
+    "weekKey": "2026-W30",
+    "monthKey": "2026-07",
+    "reps": 19,
+    "avgLiqui": 459.42,
+    "avgEfet": 588.53,
+    "avgUtiliz": 73.63,
+    "totUnidades": 86933
+  },
+  {
     "fileName": "Lista de representantes 2026-07-23 al 2026-07-23 de 18_40_00 a 03_20_00.csv",
     "fileDate": "2026-07-23",
     "fileDateBR": "23/07/26",
@@ -1456,6 +1488,38 @@
     "totUnidades": 9018
   },
   {
+    "fileName": "Lista de representantes 2026-07-28 al 2026-07-28 de 18_40_00 a 03_20_00 (1).csv",
+    "fileDate": "2026-07-28",
+    "fileDateBR": "28/07/26",
+    "turnoStr": "18:40:00 → 03:20:00",
+    "uploadTs": "30/07/2026, 00:18:21",
+    "uploadHour": "00:00",
+    "uploadHourNum": 0,
+    "weekKey": "2026-W31",
+    "monthKey": "2026-07",
+    "reps": 15,
+    "avgLiqui": 311.13,
+    "avgEfet": 410.73,
+    "avgUtiliz": 58.05,
+    "totUnidades": 15578
+  },
+  {
+    "fileName": "Lista de representantes 2026-07-28 al 2026-07-28 de 18_40_00 a 03_20_00 (2).csv",
+    "fileDate": "2026-07-28",
+    "fileDateBR": "28/07/26",
+    "turnoStr": "18:40:00 → 03:20:00",
+    "uploadTs": "30/07/2026, 00:18:21",
+    "uploadHour": "00:00",
+    "uploadHourNum": 0,
+    "weekKey": "2026-W31",
+    "monthKey": "2026-07",
+    "reps": 22,
+    "avgLiqui": 282.86,
+    "avgEfet": 462.82,
+    "avgUtiliz": 49.52,
+    "totUnidades": 15811
+  },
+  {
     "fileName": "Lista de representantes 2026-07-28 al 2026-07-28 de 18_40_00 a 03_20_00.csv",
     "fileDate": "2026-07-28",
     "fileDateBR": "28/07/26",
@@ -1550,5 +1614,21 @@
     "avgEfet": 599.88,
     "avgUtiliz": 82.53,
     "totUnidades": 9018
+  },
+  {
+    "fileName": "Lista de representantes 2026-07-29 al 2026-07-29 de 18_40_00 a 03_20_00.csv",
+    "fileDate": "2026-07-29",
+    "fileDateBR": "29/07/26",
+    "turnoStr": "18:40:00 → 03:20:00",
+    "uploadTs": "30/07/2026, 00:18:21",
+    "uploadHour": "00:00",
+    "uploadHourNum": 0,
+    "weekKey": "2026-W31",
+    "monthKey": "2026-07",
+    "reps": 18,
+    "avgLiqui": 267.5,
+    "avgEfet": 391.06,
+    "avgUtiliz": 45.44,
+    "totUnidades": 4234
   }
 ]
