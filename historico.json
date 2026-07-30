@@ -2256,6 +2256,22 @@
     "totUnidades": 38630
   },
   {
+    "fileName": "Lista de representantes 2026-07-27 al 2026-07-27 de 18_40_00 a 03_20_00.csv",
+    "fileDate": "2026-07-27",
+    "fileDateBR": "27/07/26",
+    "turnoStr": "18:40:00 → 03:20:00",
+    "uploadTs": "30/07/2026, 13:07:09",
+    "uploadHour": "13:00",
+    "uploadHourNum": 13,
+    "weekKey": "2026-W31",
+    "monthKey": "2026-07",
+    "reps": 23,
+    "avgLiqui": 294.17,
+    "avgEfet": 460.52,
+    "avgUtiliz": 46.49,
+    "totUnidades": 24633
+  },
+  {
     "fileName": "Lista de representantes 2026-07-27 al 2026-07-27 de 19_00_00 a 03_40_00.csv",
     "fileDate": "2026-07-27",
     "fileDateBR": "27/07/26",
