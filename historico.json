@@ -2224,6 +2224,208 @@
     "totUnidades": 24490
   },
   {
+    "fileName": "Lista de representantes 2026-07-27 al 2026-07-27 de 18_40_00 a 03_20_00.csv",
+    "fileDate": "2026-07-27",
+    "fileDateBR": "27/07/26",
+    "turnoStr": "18:40:00 → 03:20:00",
+    "uploadTs": "31/07/2026, 02:43:51",
+    "uploadHour": "02:00",
+    "uploadHourNum": 2,
+    "weekKey": "2026-W31",
+    "monthKey": "2026-07",
+    "reps": 23,
+    "avgLiqui": 294.17,
+    "avgEfet": 460.52,
+    "avgUtiliz": 46.49,
+    "totUnidades": 24633,
+    "rows": [
+      {
+        "id": "2242692",
+        "rep": "Gustavo Ferreira Jesus Silva",
+        "liqui": 13.0,
+        "efet": 147.0,
+        "utiliz": 9.38,
+        "unidades": 3
+      },
+      {
+        "id": "2402865",
+        "rep": "Phelipe Lendvai Da Matta Passos",
+        "liqui": 513.0,
+        "efet": 620.0,
+        "utiliz": 82.65,
+        "unidades": 3803
+      },
+      {
+        "id": "2409171",
+        "rep": "Samuel Oliveira Lisboa",
+        "liqui": 635.0,
+        "efet": 684.0,
+        "utiliz": 92.84,
+        "unidades": 195
+      },
+      {
+        "id": "2409227",
+        "rep": "Dheyson Mardonio Da Silva Araujo",
+        "liqui": 588.0,
+        "efet": 640.0,
+        "utiliz": 91.9,
+        "unidades": 948
+      },
+      {
+        "id": "2427013",
+        "rep": "Nicoly Rodrigues",
+        "liqui": 127.0,
+        "efet": 257.0,
+        "utiliz": 49.41,
+        "unidades": 3
+      },
+      {
+        "id": "2427898",
+        "rep": "Sandra Gomes Freitas De Matos",
+        "liqui": 631.0,
+        "efet": 683.0,
+        "utiliz": 92.36,
+        "unidades": 4723
+      },
+      {
+        "id": "2428632",
+        "rep": "Tiago Nascimento",
+        "liqui": 674.0,
+        "efet": 823.0,
+        "utiliz": 81.86,
+        "unidades": 598
+      },
+      {
+        "id": "2435107",
+        "rep": "Solange De Barros",
+        "liqui": 202.0,
+        "efet": 426.0,
+        "utiliz": 47.45,
+        "unidades": 32
+      },
+      {
+        "id": "2435778",
+        "rep": "Geovanna Ferreira Dos Santos",
+        "liqui": 20.0,
+        "efet": 189.0,
+        "utiliz": 10.86,
+        "unidades": 2
+      },
+      {
+        "id": "2442810",
+        "rep": "Alessandra Da Silva Santos",
+        "liqui": 18.0,
+        "efet": 100.0,
+        "utiliz": 18.18,
+        "unidades": 1
+      },
+      {
+        "id": "2451946",
+        "rep": "Joao Lucas Costa Verissimo Dos Santos",
+        "liqui": 110.0,
+        "efet": 467.0,
+        "utiliz": 23.73,
+        "unidades": 17
+      },
+      {
+        "id": "2470419",
+        "rep": "Thaynara Paola Dos Anjos",
+        "liqui": 237.0,
+        "efet": 775.0,
+        "utiliz": 30.68,
+        "unidades": 39
+      },
+      {
+        "id": "2470545",
+        "rep": "Pedro Emanuel Beserra De Lima",
+        "liqui": 691.0,
+        "efet": 856.0,
+        "utiliz": 80.72,
+        "unidades": 3614
+      },
+      {
+        "id": "2470691",
+        "rep": "Ricardo Vinicius Goncalves Monteiro",
+        "liqui": 2.0,
+        "efet": 100.0,
+        "utiliz": 2.94,
+        "unidades": 1
+      },
+      {
+        "id": "2470695",
+        "rep": "Thamires Cristyni Alves De Oliveira",
+        "liqui": 20.0,
+        "efet": 194.0,
+        "utiliz": 10.57,
+        "unidades": 2
+      },
+      {
+        "id": "2470776",
+        "rep": "Wesley Ferreira Da Silva",
+        "liqui": 503.0,
+        "efet": 730.0,
+        "utiliz": 68.84,
+        "unidades": 1016
+      },
+      {
+        "id": "2470811",
+        "rep": "Abner Braian Rodrigues Dos Santos",
+        "liqui": 10.0,
+        "efet": 100.0,
+        "utiliz": 10.29,
+        "unidades": 1
+      },
+      {
+        "id": "2481404",
+        "rep": "Joao Marcelo Batista Martins",
+        "liqui": 10.0,
+        "efet": 100.0,
+        "utiliz": 10.29,
+        "unidades": 1
+      },
+      {
+        "id": "2481417",
+        "rep": "Carlos Eduardo Araujo De Souza",
+        "liqui": 291.0,
+        "efet": 705.0,
+        "utiliz": 41.39,
+        "unidades": 48
+      },
+      {
+        "id": "2549593",
+        "rep": "Vivien Homsi",
+        "liqui": 198.0,
+        "efet": 564.0,
+        "utiliz": 35.11,
+        "unidades": 32
+      },
+      {
+        "id": "2556672",
+        "rep": "Julio Cesar Da Silva",
+        "liqui": 0.0,
+        "efet": 0.0,
+        "utiliz": 0.0,
+        "unidades": 0
+      },
+      {
+        "id": "2557333",
+        "rep": "Gabriel Luis Nolasco",
+        "liqui": 554.0,
+        "efet": 625.0,
+        "utiliz": 88.7,
+        "unidades": 4152
+      },
+      {
+        "id": "2561299",
+        "rep": "Zophis Da Cruz Fagundes",
+        "liqui": 719.0,
+        "efet": 807.0,
+        "utiliz": 89.04,
+        "unidades": 5402
+      }
+    ]
+  },
+  {
     "fileName": "Lista de representantes 2026-07-27 al 2026-07-27 de 00_00_00 a 00_00_00 (2).csv",
     "fileDate": "2026-07-27",
     "fileDateBR": "27/07/26",
